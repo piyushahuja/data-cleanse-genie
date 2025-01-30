@@ -8,38 +8,36 @@ import {
 } from "@/components/ui/dialog";
 
 interface Error {
-  type: string;
+  type: keyof typeof mockAffectedRows;
   count: number;
   description: string;
-  // Mock affected rows data for demonstration
-  affectedRows?: Array<Record<string, string | number>>;
 }
 
 interface ErrorSummaryProps {
   errors: Error[];
 }
 
-export const ErrorSummary = ({ errors }: ErrorSummaryProps) => {
-  // Mock data for affected rows
-  const mockAffectedRows = {
-    "Duplicate Records": [
-      { id: 1, customer: "John Doe", email: "john@example.com", date: "2024-01-01" },
-      { id: 2, customer: "John Doe", email: "john@example.com", date: "2024-02-15" },
-    ],
-    "Missing Values": [
-      { id: 3, customer: "Jane Smith", email: "", date: "2024-01-05" },
-      { id: 4, customer: "Bob Wilson", email: "bob@example.com", date: "" },
-    ],
-    "Inconsistent Dates": [
-      { id: 5, customer: "Alice Brown", email: "alice@example.com", date: "01/15/24" },
-      { id: 6, customer: "Charlie Davis", email: "charlie@example.com", date: "2024.02.01" },
-    ],
-    "Invalid Product Codes": [
-      { id: 7, customer: "Eve Johnson", product_code: "XYZ123", status: "Invalid" },
-      { id: 8, customer: "Frank Miller", product_code: "ABC456", status: "Not Found" },
-    ],
-  };
+// Define the mock data structure
+const mockAffectedRows = {
+  "Duplicate Records": [
+    { id: 1, customer: "John Doe", email: "john@example.com", date: "2024-01-01" },
+    { id: 2, customer: "John Doe", email: "john@example.com", date: "2024-02-15" },
+  ],
+  "Missing Values": [
+    { id: 3, customer: "Jane Smith", email: "", date: "2024-01-05" },
+    { id: 4, customer: "Bob Wilson", email: "bob@example.com", date: "" },
+  ],
+  "Inconsistent Dates": [
+    { id: 5, customer: "Alice Brown", email: "alice@example.com", date: "01/15/24" },
+    { id: 6, customer: "Charlie Davis", email: "charlie@example.com", date: "2024.02.01" },
+  ],
+  "Invalid Product Codes": [
+    { id: 7, customer: "Eve Johnson", product_code: "XYZ123", status: "Invalid" },
+    { id: 8, customer: "Frank Miller", product_code: "ABC456", status: "Not Found" },
+  ],
+} as const;
 
+export const ErrorSummary = ({ errors }: ErrorSummaryProps) => {
   return (
     <div className="rounded-lg border p-6 space-y-4">
       <div className="flex items-center space-x-3">
