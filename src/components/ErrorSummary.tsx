@@ -7,8 +7,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+export type ErrorType = "Duplicate Records" | "Missing Values" | "Inconsistent Dates" | "Invalid Product Codes";
+
 interface Error {
-  type: keyof typeof mockAffectedRows;
+  type: ErrorType;
   count: number;
   description: string;
 }
@@ -93,7 +95,7 @@ export const ErrorSummary = ({ errors }: ErrorSummaryProps) => {
                               key={cellIndex}
                               className="px-4 py-2 text-sm text-neutral-600"
                             >
-                              {value}
+                              {String(value)}
                             </td>
                           ))}
                         </tr>

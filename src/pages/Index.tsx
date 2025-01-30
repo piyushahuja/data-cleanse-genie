@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FileUpload } from "@/components/FileUpload";
 import { SchemaValidation } from "@/components/SchemaValidation";
-import { ErrorSummary } from "@/components/ErrorSummary";
+import { ErrorSummary, ErrorType } from "@/components/ErrorSummary";
 import { CleaningOptions } from "@/components/CleaningOptions";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
@@ -22,22 +22,22 @@ const Index = () => {
 
   const errors = [
     {
-      type: "Duplicate Records",
+      type: "Duplicate Records" as ErrorType,
       count: 15,
       description: "Records sharing the same key identifiers",
     },
     {
-      type: "Missing Values",
+      type: "Missing Values" as ErrorType,
       count: 8,
       description: "Required fields with no data",
     },
     {
-      type: "Inconsistent Dates",
+      type: "Inconsistent Dates" as ErrorType,
       count: 5,
       description: "Dates not following the standard format",
     },
     {
-      type: "Invalid Product Codes",
+      type: "Invalid Product Codes" as ErrorType,
       count: 3,
       description: "Codes not found in master data",
     },
