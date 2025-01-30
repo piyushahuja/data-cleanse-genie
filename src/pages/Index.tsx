@@ -5,6 +5,7 @@ import { ErrorSummary } from "@/components/ErrorSummary";
 import { CleaningOptions } from "@/components/CleaningOptions";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import NavigationBar from "@/components/NavigationBar";
 
 const Index = () => {
   const [masterFile, setMasterFile] = useState<File | null>(null);
@@ -94,9 +95,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-neutral-50">
+      <NavigationBar />
       <div className="container py-8 space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-800">Tailor Flow AI</h1>
           <p className="mt-2 text-neutral-600">Master Data Cleaning Demo</p>
         </div>
 
