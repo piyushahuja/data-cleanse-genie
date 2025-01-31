@@ -1,81 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileUpload } from "@/components/FileUpload";
 import { SchemaValidation } from "@/components/SchemaValidation";
-import { ErrorSummary, ErrorType } from "@/components/ErrorSummary";
+import { ErrorSummary } from "@/components/ErrorSummary";
 import { CleaningOptions } from "@/components/CleaningOptions";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import NavigationBar from "@/components/NavigationBar";
+import { validateSchema, type SchemaIssue } from "@/services/schemaValidation";
+import { validateFiles, type ValidationError, type CleaningOption } from "@/services/errorValidation";
+import { toast } from "sonner";
 
 const Index = () => {
   const [masterFile, setMasterFile] = useState<File | null>(null);
   const [dataFile, setDataFile] = useState<File | null>(null);
   const [schemaStatus, setSchemaStatus] = useState<"pending" | "valid" | "invalid">("pending");
+  const [schemaIssues, setSchemaIssues] = useState<SchemaIssue[]>([]);
+  const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [cleaningOptions, setCleaningOptions] = useState<CleaningOption[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
 
-  // Mock data for demonstration
-  const schemaIssues = [
-    "Column 'customer_id' missing in data file",
-    "Expected date format YYYY-MM-DD for 'purchase_date'",
-    "Invalid data type in 'quantity' column (expected number)",
-  ];
+  useEffect(() => {
+    const validate = async () => {
+      if (!masterFile || !dataFile) return;
+      
+      setSchemaStatus("pending");
+      try {
+        // Validate schema
+        const issues = await validateSchema(masterFile, dataFile);
+        setSchemaIssues(issues);
+        setSchemaStatus(issues.length === 0 ? "valid" : "invalid");
 
-  const errors = [
-    {
-      type: "Duplicate Records" as ErrorType,
-      count: 15,
-      description: "Records sharing the same key identifiers",
-    },
-    {
-      type: "Missing Values" as ErrorType,
-      count: 8,
-      description: "Required fields with no data",
-    },
-    {
-      type: "Inconsistent Dates" as ErrorType,
-      count: 5,
-      description: "Dates not following the standard format",
-    },
-    {
-      type: "Invalid Product Codes" as ErrorType,
-      count: 3,
-      description: "Codes not found in master data",
-    },
-  ];
+        // Validate files and get errors and cleaning options
+        const { errors: validationErrors, cleaningOptions: options } = 
+          await validateFiles(masterFile, dataFile);
+        setErrors(validationErrors);
+        setCleaningOptions(options);
+      } catch (error) {
+        toast.error("Failed to validate files");
+        setSchemaStatus("invalid");
+      }
+    };
 
-  const cleaningOptions = [
-    {
-      id: "duplicates",
-      label: "Remove Duplicates",
-      description: "Automatically remove duplicate records based on key identifiers",
-      count: 15,
-    },
-    {
-      id: "missing",
-      label: "Fix Missing Data",
-      description: "Fill missing values with appropriate defaults or remove records",
-      count: 8,
-    },
-    {
-      id: "dates",
-      label: "Standardize Dates",
-      description: "Convert all dates to YYYY-MM-DD format",
-      count: 5,
-    },
-    {
-      id: "products",
-      label: "Validate Product Codes",
-      description: "Check and correct product codes against master data",
-      count: 3,
-    },
-  ];
+    validate();
+  }, [masterFile, dataFile]);
 
   const handleMasterFileUpload = (file: File) => {
     setMasterFile(file);
-    // Simulate schema validation
-    setTimeout(() => {
-      setSchemaStatus("invalid");
-    }, 1500);
   };
 
   const handleDataFileUpload = (file: File) => {
@@ -108,7 +78,10 @@ const Index = () => {
 
         {masterFile && dataFile && (
           <div className="space-y-8 animate-fade-in">
-            <SchemaValidation status={schemaStatus} issues={schemaIssues} />
+            <SchemaValidation 
+              status={schemaStatus} 
+              issues={schemaIssues} 
+            />
             <ErrorSummary errors={errors} />
             <CleaningOptions
               options={cleaningOptions}
