@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FileUpload } from "@/components/FileUpload";
 import { SchemaValidation } from "@/components/SchemaValidation";
-import { ErrorSummary } from "@/components/ErrorSummary";
+import { ErrorSummary, ErrorType } from "@/components/ErrorSummary";
 import { CleaningOptions } from "@/components/CleaningOptions";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, CheckCircle2, AlertTriangle } from "lucide-react";
 import NavigationBar from "@/components/NavigationBar";
 import { validateSchema, type SchemaIssue } from "@/services/schemaValidation";
 import { validateFiles, type ValidationError, type CleaningOption } from "@/services/errorValidation";
@@ -19,37 +19,37 @@ const Index = () => {
   const [cleaningOptions, setCleaningOptions] = useState<CleaningOption[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
 
-  useEffect(() => {
-    const validate = async () => {
-      if (!masterFile || !dataFile) return;
-      
-      setSchemaStatus("pending");
-      try {
-        // Validate schema
-        const issues = await validateSchema(masterFile, dataFile);
-        setSchemaIssues(issues);
-        setSchemaStatus(issues.length === 0 ? "valid" : "invalid");
-
-        // Validate files and get errors and cleaning options
-        const { errors: validationErrors, cleaningOptions: options } = 
-          await validateFiles(masterFile, dataFile);
-        setErrors(validationErrors);
-        setCleaningOptions(options);
-      } catch (error) {
-        toast.error("Failed to validate files");
-        setSchemaStatus("invalid");
-      }
-    };
-
-    validate();
-  }, [masterFile, dataFile]);
-
   const handleMasterFileUpload = (file: File) => {
     setMasterFile(file);
   };
 
   const handleDataFileUpload = (file: File) => {
     setDataFile(file);
+  };
+
+  const handleSchemaValidation = async () => {
+    setSchemaStatus("pending");
+    try {
+      const issues = await validateSchema(masterFile!, dataFile!);
+      setSchemaIssues(issues);
+      setSchemaStatus(issues.length === 0 ? "valid" : "invalid");
+      toast.success("Schema validation completed");
+    } catch (error) {
+      toast.error("Failed to validate schema");
+      setSchemaStatus("invalid");
+    }
+  };
+
+  const handleErrorDetection = async () => {
+    try {
+      const { errors: validationErrors, cleaningOptions: options } = 
+        await validateFiles(masterFile!, dataFile!);
+      setErrors(validationErrors);
+      setCleaningOptions(options);
+      toast.success("Error detection completed");
+    } catch (error) {
+      toast.error("Failed to detect errors");
+    }
   };
 
   const toggleOption = (id: string) => {
@@ -59,9 +59,10 @@ const Index = () => {
   };
 
   const handleDownload = () => {
-    // In a real app, this would process the files and apply the selected cleaning options
     console.log("Downloading cleaned data...");
   };
+
+  const filesUploaded = masterFile !== null && dataFile !== null;
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -76,8 +77,27 @@ const Index = () => {
           <FileUpload type="data" onFileAccepted={handleDataFileUpload} />
         </div>
 
-        {masterFile && dataFile && (
+        {(masterFile || dataFile) && (
           <div className="space-y-8 animate-fade-in">
+            <div className="flex gap-4">
+              <Button
+                onClick={handleSchemaValidation}
+                disabled={!filesUploaded}
+                className="bg-primary hover:bg-primary-dark text-white"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Validate Schema
+              </Button>
+              <Button
+                onClick={handleErrorDetection}
+                disabled={!filesUploaded}
+                className="bg-primary hover:bg-primary-dark text-white"
+              >
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                Detect Errors
+              </Button>
+            </div>
+
             <SchemaValidation 
               status={schemaStatus} 
               issues={schemaIssues} 
