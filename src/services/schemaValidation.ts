@@ -11,7 +11,7 @@ export const validateSchema = async (masterFile: File, dataFile: File): Promise<
   formData.append('masterFile', masterFile);
   formData.append('dataFile', dataFile);
   
-  const response = await fetch('/api/validate-schema', {
+  const response = await fetch('http://127.0.0.1:8000/api/validate-schema', {
     method: 'POST',
     body: formData,
   });

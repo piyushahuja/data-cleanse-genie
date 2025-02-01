@@ -8,10 +8,10 @@ export interface ValidationError {
 
 export interface CleaningOption {
   id: string;
-  label: string;
+//   label: string;
   description: string;
-  count: number;
-  errorType: ErrorType; // Link to corresponding error
+//   count: number;
+//   errorType: ErrorType; // Link to corresponding error
 }
 
 export interface ValidationResult {
@@ -46,51 +46,55 @@ const mockValidationResult: ValidationResult = {
   cleaningOptions: [
     {
       id: "duplicates",
-      label: "Remove Duplicates",
+    //   label: "Remove Duplicates",
       description: "Automatically remove duplicate records based on key identifiers",
-      count: 15,
-      errorType: "Duplicate Records",
+    //   count: 15,
+    //   errorType: "Duplicate Records",
     },
-    {
-      id: "missing",
-      label: "Fix Missing Data",
-      description: "Fill missing values with appropriate defaults or remove records",
-      count: 8,
-      errorType: "Missing Values",
-    },
-    {
-      id: "dates",
-      label: "Standardize Dates",
-      description: "Convert all dates to YYYY-MM-DD format",
-      count: 5,
-      errorType: "Inconsistent Dates",
-    },
-    {
-      id: "products",
-      label: "Validate Product Codes",
-      description: "Check and correct product codes against master data",
-      count: 3,
-      errorType: "Invalid Product Codes",
-    },
+    // {
+    //   id: "missing",
+    //   label: "Fix Missing Data",
+    //   description: "Fill missing values with appropriate defaults or remove records",
+    //   count: 8,
+    //   errorType: "Missing Values",
+    // },
+    // {
+    //   id: "dates",
+    //   label: "Standardize Dates",
+    //   description: "Convert all dates to YYYY-MM-DD format",
+    //   count: 5,
+    //   errorType: "Inconsistent Dates",
+    // },
+    // {
+    //   id: "products",
+    //   label: "Validate Product Codes",
+    //   description: "Check and correct product codes against master data",
+    //   count: 3,
+    //   errorType: "Invalid Product Codes",
+    // },
   ],
 };
 
-export const validateFiles = async (masterFile: File, dataFile: File): Promise<ValidationResult> => {
-  const formData = new FormData();
-  formData.append('masterFile', masterFile);
-  formData.append('dataFile', dataFile);
-  
-  const response = await fetch('/api/validate-files', {
+export const validateFiles = async (masterFileId, dataFileId) => {
+
+
+  const response = await fetch('http://127.0.0.1:8000/detect_errors', {
     method: 'POST',
-    body: formData,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ schema_file_id: masterFileId, data_file_id: dataFileId }),
   });
   
-  // Uncomment when API is ready
-  // if (!response.ok) {
-  //   throw new Error('Failed to validate files');
-  // }
-  // return response.json();
+//   Uncomment when API is ready
+  if (!response.ok) {
+    console.error('Failed to validate files');
+    throw new Error('Failed to validate files');
+  }
+  const result = await response.json();
+  console.log('Validation result:', result);
+  return result;
 
   // Remove this when API is ready
-  return mockValidationResult;
+//   return mockValidationResult;
 }; 

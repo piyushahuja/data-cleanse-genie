@@ -2,9 +2,9 @@ import { Check } from "lucide-react";
 
 interface CleaningOption {
   id: string;
-  label: string;
+  // label: string;
   description: string;
-  count: number;
+  // count: number;
 }
 
 interface CleaningOptionsProps {
@@ -44,10 +44,10 @@ export const CleaningOptions = ({
                 {selectedOptions.includes(option.id) && <Check className="w-3 h-3" />}
               </div>
               <div className="flex-1">
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span className="font-medium text-neutral-700">{option.label}</span>
                   <span className="text-sm text-neutral-500">{option.count} items</span>
-                </div>
+                </div> */}
                 <p className="mt-1 text-sm text-neutral-500">{option.description}</p>
               </div>
             </div>

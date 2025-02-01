@@ -6,9 +6,10 @@ import { toast } from "sonner";
 interface FileUploadProps {
   onFileAccepted: (file: File) => void;
   type: "master" | "data";
+  isUploading?: boolean;
 }
 
-export const FileUpload = ({ onFileAccepted, type }: FileUploadProps) => {
+export const FileUpload = ({ onFileAccepted, type, isUploading = false }: FileUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
 
   const onDrop = useCallback(
@@ -28,6 +29,7 @@ export const FileUpload = ({ onFileAccepted, type }: FileUploadProps) => {
     accept: {
       "text/csv": [".csv"],
       "application/json": [".json"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
     },
     maxFiles: 1,
   });
@@ -41,9 +43,10 @@ export const FileUpload = ({ onFileAccepted, type }: FileUploadProps) => {
             ? "border-primary bg-primary-light"
             : "border-neutral-300 hover:border-primary"
         }
-        ${file ? "bg-success-light border-success" : ""}`}
+        ${file ? "bg-success-light border-success" : ""}
+        ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
     >
-      <input {...getInputProps()} />
+      <input {...getInputProps()} disabled={isUploading} />
       <div className="space-y-4">
         {file ? (
           <>
