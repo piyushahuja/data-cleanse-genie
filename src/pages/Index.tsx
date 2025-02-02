@@ -79,7 +79,7 @@ const Index = () => {
     
     setIsDetectingErrors(true);
     try {
-      const { errors: validationErrors, cleaningOptions: options } = 
+      const { errors: validationErrors, cleanupOptions: options } = 
         await validateFiles(masterFile.file_id, dataFile.file_id);
       setErrors(validationErrors);
       setCleaningOptions(options);

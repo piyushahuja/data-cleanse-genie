@@ -76,7 +76,7 @@ const mockValidationResult: ValidationResult = {
 };
 
 export const validateFiles = async (masterFileId, dataFileId) => {
-
+    
 
   const response = await fetch('http://127.0.0.1:8000/detect_errors', {
     method: 'POST',
