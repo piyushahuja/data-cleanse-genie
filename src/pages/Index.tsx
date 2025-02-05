@@ -10,10 +10,17 @@ import { validateSchema, type SchemaIssue } from "@/services/schemaValidation";
 import { validateFiles, type ValidationError, type CleaningOption } from "@/services/errorValidation";
 import { uploadFile, type UploadResponse } from "@/services/fileUpload";
 import { toast } from "sonner";
+import { downloadCleanedData } from "@/services/downloadData";
+import { cleanData, downloadFile } from "@/services/downloadData";
 
 interface FileState {
   file: File;
   file_id: string;
+}
+
+interface CleanupOperation {
+  id: string;
+  description: string;
 }
 
 const Index = () => {
@@ -23,9 +30,11 @@ const Index = () => {
   const [schemaIssues, setSchemaIssues] = useState<SchemaIssue[]>([]);
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [cleaningOptions, setCleaningOptions] = useState<CleaningOption[]>([]);
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [selectedOptions, setSelectedOptions] = useState<CleanupOperation[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDetectingErrors, setIsDetectingErrors] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [cleanedFileId, setCleanedFileId] = useState<string | null>(null);
 
   const handleMasterFileUpload = async (file: File) => {
     setIsUploading(true);
@@ -92,13 +101,47 @@ const Index = () => {
   };
 
   const toggleOption = (id: string) => {
-    setSelectedOptions((prev) =>
-      prev.includes(id) ? prev.filter((o) => o !== id) : [...prev, id]
-    );
+    setSelectedOptions((prev) => {
+      const option = cleaningOptions.find(opt => opt.id === id);
+      if (!option) return prev;
+
+      const exists = prev.some(op => op.id === id);
+      if (exists) {
+        return prev.filter(op => op.id !== id);
+      } else {
+        return [...prev, { id: option.id, description: option.description }];
+      }
+    });
   };
 
-  const handleDownload = () => {
-    console.log("Downloading cleaned data...");
+  const handleCleanup = async () => {
+    if (!dataFile || !masterFile) return;
+    
+    setIsDownloading(true);
+    try {
+      const result = await cleanData(masterFile.file_id, dataFile.file_id, selectedOptions);
+      
+      if (result.status === 'success') {
+        setCleanedFileId(result.new_file_id);
+        toast.success('Data cleaned successfully');
+        // You could show changes_made in UI if needed
+      }
+    } catch (error) {
+      toast.error("Failed to clean data");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!cleanedFileId) return;
+    
+    try {
+      await downloadFile(cleanedFileId, 'cleaned_data.csv');
+      toast.success("File downloaded successfully");
+    } catch (error) {
+      toast.error("Failed to download file");
+    }
   };
 
   const filesUploaded = masterFile !== null && dataFile !== null;
@@ -156,19 +199,33 @@ const Index = () => {
             <ErrorSummary errors={errors} />
             <CleaningOptions
               options={cleaningOptions}
-              selectedOptions={selectedOptions}
+              selectedOptions={selectedOptions.map(op => op.id)}
               onOptionToggle={toggleOption}
             />
 
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-4">
               <Button
-                onClick={handleDownload}
+                onClick={handleCleanup}
                 className="bg-primary hover:bg-primary-dark text-white"
-                disabled={selectedOptions.length === 0}
+                disabled={selectedOptions.length === 0 || isDownloading}
               >
-                <Download className="w-4 h-4 mr-2" />
-                Download Cleaned Data
+                {isDownloading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                )}
+                {isDownloading ? "Cleaning..." : "Clean Data"}
               </Button>
+
+              {cleanedFileId && (
+                <Button
+                  onClick={handleDownload}
+                  className="bg-primary hover:bg-primary-dark text-white"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Cleaned File
+                </Button>
+              )}
             </div>
           </div>
         )}
