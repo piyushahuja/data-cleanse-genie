@@ -36,6 +36,7 @@ const Index = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [cleanedFileId, setCleanedFileId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState<string>("");
+  const [isValidatingSchema, setIsValidatingSchema] = useState(false);
 
   const handleMasterFileUpload = async (file: File) => {
     setIsUploading(true);
@@ -72,15 +73,18 @@ const Index = () => {
   const handleSchemaValidation = async () => {
     if (!masterFile || !dataFile) return;
     
+    setIsValidatingSchema(true);
     setSchemaStatus("pending");
     try {
-      const issues = await validateSchema(masterFile.file, dataFile.file);
-      setSchemaIssues(issues);
-      setSchemaStatus(issues.length === 0 ? "valid" : "invalid");
+      const issues = await validateSchema(masterFile.file_id, dataFile.file_id);
+      setSchemaIssues(issues.errors);
+      setSchemaStatus(issues.is_valid ? "valid" : "invalid");
       toast.success("Schema validation completed");
     } catch (error) {
       toast.error("Failed to validate schema");
       setSchemaStatus("invalid");
+    } finally {
+      setIsValidatingSchema(false);
     }
   };
 
@@ -173,11 +177,15 @@ const Index = () => {
             <div className="flex gap-4">
               <Button
                 onClick={handleSchemaValidation}
-                disabled={!filesUploaded || isUploading}
+                disabled={!filesUploaded || isUploading || isValidatingSchema}
                 className="bg-primary hover:bg-primary-dark text-white"
               >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Validate Schema
+                {isValidatingSchema ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                )}
+                {isValidatingSchema ? "Validating Schema..." : "Validate Schema"}
               </Button>
               <Button
                 onClick={handleErrorDetection}
