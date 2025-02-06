@@ -75,11 +75,7 @@ const mockValidationResult: ValidationResult = {
   ],
 };
 
-export const validateFiles = async (
-  masterFileId: string, 
-  dataFileId: string,
-  customPrompt?: string
-) => {
+export const validateFiles = async (masterFileId: string, dataFileId: string, prompt?: string) => {
   const response = await fetch('http://127.0.0.1:8000/detect_errors', {
     method: 'POST',
     headers: {
@@ -88,13 +84,18 @@ export const validateFiles = async (
     body: JSON.stringify({ 
       schema_file_id: masterFileId, 
       data_file_id: dataFileId,
-      custom_prompt: customPrompt 
+      prompt: prompt  // Add prompt to the request
     }),
   });
-
+  
   if (!response.ok) {
+    console.error('Failed to validate files');
     throw new Error('Failed to validate files');
   }
+  const result = await response.json();
+  console.log('Validation result:', result);
+  return result;
 
-  return response.json();
+  // Remove this when API is ready
+//   return mockValidationResult;
 }; 

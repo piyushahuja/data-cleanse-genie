@@ -4,7 +4,7 @@ import { SchemaValidation } from "@/components/SchemaValidation";
 import { ErrorSummary, ErrorType } from "@/components/ErrorSummary";
 import { CleaningOptions } from "@/components/CleaningOptions";
 import { Button } from "@/components/ui/button";
-import { Download, CheckCircle2, AlertTriangle, Loader2, Sparkles } from "lucide-react";
+import { Download, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 import NavigationBar from "@/components/NavigationBar";
 import { validateSchema, type SchemaIssue } from "@/services/schemaValidation";
 import { validateFiles, type ValidationError, type CleaningOption } from "@/services/errorValidation";
@@ -12,7 +12,6 @@ import { uploadFile, type UploadResponse } from "@/services/fileUpload";
 import { toast } from "sonner";
 import { downloadCleanedData } from "@/services/downloadData";
 import { cleanData, downloadFile } from "@/services/downloadData";
-import { DataWizardLab } from "@/components/DataWizard/DataWizardLab";
 
 interface FileState {
   file: File;
@@ -36,8 +35,7 @@ const Index = () => {
   const [isDetectingErrors, setIsDetectingErrors] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [cleanedFileId, setCleanedFileId] = useState<string | null>(null);
-  const [customPrompt, setCustomPrompt] = useState<string>("");
-  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [prompt, setPrompt] = useState<string>("");
 
   const handleMasterFileUpload = async (file: File) => {
     setIsUploading(true);
@@ -86,21 +84,13 @@ const Index = () => {
     }
   };
 
-  const handlePromptChange = (prompt: string) => {
-    setCustomPrompt(prompt);
-  };
-
-  const handleErrorDetection = async (prompt?: string) => {
+  const handleErrorDetection = async () => {
     if (!masterFile || !dataFile) return;
     
     setIsDetectingErrors(true);
     try {
       const { errors: validationErrors, cleanupOptions: options } = 
-        await validateFiles(
-          masterFile.file_id, 
-          dataFile.file_id,
-          prompt
-        );
+        await validateFiles(masterFile.file_id, dataFile.file_id, prompt);
       setErrors(validationErrors);
       setCleaningOptions(options);
       toast.success("Error detection completed");
@@ -180,84 +170,63 @@ const Index = () => {
 
         {(masterFile || dataFile) && (
           <div className="space-y-8 animate-fade-in">
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <Button
-                  onClick={handleSchemaValidation}
-                  disabled={!filesUploaded || isUploading}
-                  className="bg-primary hover:bg-primary-dark text-white"
-                >
+            <div className="flex gap-4">
+              <Button
+                onClick={handleSchemaValidation}
+                disabled={!filesUploaded || isUploading}
+                className="bg-primary hover:bg-primary-dark text-white"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Validate Schema
+              </Button>
+              <Button
+                onClick={handleErrorDetection}
+                disabled={!filesUploaded || isUploading || isDetectingErrors}
+                className="bg-primary hover:bg-primary-dark text-white"
+              >
+                {isDetectingErrors ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                )}
+                {isDetectingErrors ? "Analyzing Files..." : "Detect Errors"}
+              </Button>
+            </div>
+
+            <SchemaValidation 
+              status={schemaStatus} 
+              issues={schemaIssues} 
+            />
+            <ErrorSummary errors={errors} />
+            <CleaningOptions
+              options={cleaningOptions}
+              selectedOptions={selectedOptions.map(op => op.id)}
+              onOptionToggle={toggleOption}
+            />
+
+            <div className="flex justify-end gap-4">
+              <Button
+                onClick={handleCleanup}
+                className="bg-primary hover:bg-primary-dark text-white"
+                disabled={selectedOptions.length === 0 || isDownloading}
+              >
+                {isDownloading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
                   <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Validate Schema
-                </Button>
+                )}
+                {isDownloading ? "Cleaning..." : "Clean Data"}
+              </Button>
 
+              {cleanedFileId && (
                 <Button
-                  onClick={() => handleErrorDetection(customPrompt)}
-                  disabled={!filesUploaded || isUploading || isDetectingErrors}
+                  onClick={handleDownload}
                   className="bg-primary hover:bg-primary-dark text-white"
                 >
-                  {isDetectingErrors ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 mr-2" />
-                  )}
-                  {isDetectingErrors ? "Analyzing Files..." : "Analyze Files"}
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Cleaned File
                 </Button>
-                
-                {masterFile && dataFile && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsWizardOpen(!isWizardOpen)}
-                    className="text-primary hover:bg-primary-light"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    {isWizardOpen ? "Close Wizard" : "Open Data Wizard"}
-                  </Button>
-                )}
-              </div>
-
-              {isWizardOpen && masterFile && dataFile && (
-                <DataWizardLab 
-                  onPromptChange={handlePromptChange}
-                  isAnalyzing={isDetectingErrors}
-                />
               )}
-
-              <SchemaValidation 
-                status={schemaStatus} 
-                issues={schemaIssues} 
-              />
-              <ErrorSummary errors={errors} />
-              <CleaningOptions
-                options={cleaningOptions}
-                selectedOptions={selectedOptions.map(op => op.id)}
-                onOptionToggle={toggleOption}
-              />
-
-              <div className="flex justify-end gap-4">
-                <Button
-                  onClick={handleCleanup}
-                  className="bg-primary hover:bg-primary-dark text-white"
-                  disabled={selectedOptions.length === 0 || isDownloading}
-                >
-                  {isDownloading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                  )}
-                  {isDownloading ? "Cleaning..." : "Clean Data"}
-                </Button>
-
-                {cleanedFileId && (
-                  <Button
-                    onClick={handleDownload}
-                    className="bg-primary hover:bg-primary-dark text-white"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Cleaned File
-                  </Button>
-                )}
-              </div>
             </div>
           </div>
         )}
