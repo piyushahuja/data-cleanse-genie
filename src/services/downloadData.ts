@@ -16,15 +16,15 @@ export const cleanData = async (
   dataFileId: string, 
   operations: CleanupOperation[]
 ): Promise<CleanDataResponse> => {
-  const response = await fetch(getApiUrl('/clean'), {
+  const response = await fetch(getApiUrl('/cleanup'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      master_file_id: masterFileId,
+      schema_file_id: masterFileId,
       data_file_id: dataFileId,
-      operations,
+      cleanup_operations: operations
     }),
   });
 

@@ -1,3 +1,5 @@
+import { getApiUrl } from '@/config/api';
+
 export type ErrorType = "Duplicate Records" | "Missing Values" | "Inconsistent Dates" | "Invalid Product Codes";
 
 export interface ValidationError {
@@ -75,8 +77,8 @@ const mockValidationResult: ValidationResult = {
   ],
 };
 
-export const validateFiles = async (masterFileId: string, dataFileId: string, prompt?: string) => {
-  const response = await fetch('http://127.0.0.1:8000/detect_errors', {
+export const validateFiles = async (masterFileId: string, dataFileId: string, prompt?: string): Promise<ValidationResult> => {
+  const response = await fetch(getApiUrl('/detect_errors'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -84,18 +86,13 @@ export const validateFiles = async (masterFileId: string, dataFileId: string, pr
     body: JSON.stringify({ 
       schema_file_id: masterFileId, 
       data_file_id: dataFileId,
-      prompt: prompt  // Add prompt to the request
+      prompt: prompt
     }),
   });
   
   if (!response.ok) {
-    console.error('Failed to validate files');
     throw new Error('Failed to validate files');
   }
-  const result = await response.json();
-  console.log('Validation result:', result);
-  return result;
 
-  // Remove this when API is ready
-//   return mockValidationResult;
+  return response.json();
 }; 
