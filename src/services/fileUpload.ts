@@ -1,3 +1,5 @@
+import { getApiUrl } from '@/config/api';
+
 export interface UploadResponse {
   file_id: string;
 }
@@ -5,20 +7,18 @@ export interface UploadResponse {
 export const uploadFile = async (file: File, type: 'master' | 'data'): Promise<UploadResponse> => {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('type', type);
   
-  const response = await fetch('http://127.0.0.1:8000/upload', {
+  const response = await fetch(getApiUrl('/upload'), {
     method: 'POST',
     body: formData,
+    headers: {
+      'X-File-Type': type,
+    },
   });
 
-  try {
-    const data = await response.json();
-    console.log("response", data);
-    return data;
-  } catch (error) {
-    console.error("Error parsing JSON response:", error);
-    throw new Error('Failed to upload file');
+  if (!response.ok) {
+    throw new Error('Upload failed');
   }
-  
+
+  return response.json();
 }; 
