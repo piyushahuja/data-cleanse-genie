@@ -51,7 +51,7 @@ const NavigationBar = () => {
         <Button variant="ghost" size="icon" onClick={handleMenu}>
           <Menu className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-semibold text-neutral-800">Tailor Flow AI</h1>
+        <h1 className="text-xl font-semibold text-neutral-800">DataKleen AI</h1>
       </div>
       
       <div className="flex items-center space-x-2">
