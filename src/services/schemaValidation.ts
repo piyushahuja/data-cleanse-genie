@@ -1,3 +1,5 @@
+import { getApiUrl } from '@/config/api';
+
 export interface SchemaValidationResponse {
   status: 'success' | 'error';
   is_valid: boolean;
@@ -11,7 +13,7 @@ export const schemaIssues: string[] = [
 ];
 
 export const validateSchema = async (schemaFileId: string, dataFileId: string): Promise<SchemaValidationResponse> => {
-  const response = await fetch('http://127.0.0.1:8000/validate_schema', {
+  const response = await fetch(getApiUrl('/validate_schema'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

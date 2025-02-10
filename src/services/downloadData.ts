@@ -1,45 +1,45 @@
+import { getApiUrl } from '@/config/api';
+
 interface CleanupOperation {
   id: string;
   description: string;
 }
 
-interface CleanupResponse {
-  status: 'success' | 'partial' | 'failed';
+interface CleanDataResponse {
+  status: 'success' | 'error';
   new_file_id: string;
-  changes_made: any[]; // Update this type based on your changes array structure
+  changes_made?: string[];
 }
 
 export const cleanData = async (
   masterFileId: string, 
   dataFileId: string, 
-  cleanupOperations: CleanupOperation[]
-): Promise<CleanupResponse> => {
-  const response = await fetch('http://127.0.0.1:8000/cleanup', {
+  operations: CleanupOperation[]
+): Promise<CleanDataResponse> => {
+  const response = await fetch(getApiUrl('/clean'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ 
-      schema_file_id: masterFileId,
+    body: JSON.stringify({
+      master_file_id: masterFileId,
       data_file_id: dataFileId,
-      cleanup_operations: cleanupOperations 
+      operations,
     }),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to clean data');
+    throw new Error('Data cleaning failed');
   }
 
   return response.json();
 };
 
-export const downloadFile = async (fileId: string, filename: string) => {
-  const response = await fetch(`http://127.0.0.1:8000/download/${fileId}`, {
-    method: 'GET',
-  });
+export const downloadFile = async (fileId: string, filename: string): Promise<void> => {
+  const response = await fetch(getApiUrl(`/download/${fileId}`));
 
   if (!response.ok) {
-    throw new Error('Failed to download file');
+    throw new Error('Download failed');
   }
 
   const blob = await response.blob();
